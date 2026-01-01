@@ -1,0 +1,40 @@
+{
+  "name": "@discord-chat-exporter/cli",
+  "version": "0.1.0",
+  "description": "CLI for exporting Discord chat history",
+  "type": "module",
+  "bin": {
+    "discord-chat-exporter": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "discord",
+    "chat",
+    "exporter",
+    "cli",
+    "command-line"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@discord-chat-exporter/core": "workspace:*",
+    "commander": "^12.1.0",
+    "cli-progress": "^3.12.0"
+  },
+  "devDependencies": {
+    "@types/cli-progress": "^3.11.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
