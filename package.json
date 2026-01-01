@@ -16,7 +16,9 @@
     "typecheck": "pnpm -r run typecheck",
     "lint": "eslint packages/*/src --ext .ts",
     "format": "prettier --write \"packages/*/src/**/*.ts\"",
-    "clean": "pnpm -r exec rm -rf dist && rm -rf node_modules"
+    "clean": "pnpm -r exec rm -rf dist && rm -rf node_modules",
+    "link:cli": "pnpm build && cd packages/cli && pnpm link --global",
+    "publish:dry": "pnpm build && pnpm -r publish --dry-run --no-git-checks"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

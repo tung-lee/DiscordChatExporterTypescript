@@ -1,6 +1,6 @@
 {
   "name": "@discord-chat-exporter/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI for exporting Discord chat history",
   "type": "module",
   "bin": {
@@ -27,7 +27,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@discord-chat-exporter/core": "workspace:*",
+    "@discord-chat-exporter/core": "^0.1.0",
     "commander": "^12.1.0",
     "cli-progress": "^3.12.0"
   },
