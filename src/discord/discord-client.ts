@@ -26,7 +26,9 @@ import {
 
 const DISCORD_API_BASE = 'https://discord.com/api/v10';
 const MAX_RETRIES = 5;
-const INITIAL_RETRY_DELAY = 1000;
+const INITIAL_RETRY_DELAY_MS = 1000;
+const MAX_RETRY_DELAY_MS = 60000;
+const PAGINATION_LIMIT = 100;
 
 /**
  * Progress callback type
@@ -82,9 +84,9 @@ export class DiscordClient {
           const retryAfter = response.headers['retry-after'];
           const delayMs = retryAfter
             ? parseFloat(String(retryAfter)) * 1000
-            : INITIAL_RETRY_DELAY * Math.pow(2, attempt);
+            : INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt);
 
-          await delay(Math.min(delayMs, 60000));
+          await delay(Math.min(delayMs, MAX_RETRY_DELAY_MS));
           continue;
         }
 
@@ -93,8 +95,8 @@ export class DiscordClient {
         lastError = error as Error;
 
         // Retry on network errors
-        const delayMs = INITIAL_RETRY_DELAY * Math.pow(2, attempt);
-        await delay(Math.min(delayMs, 60000));
+        const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt);
+        await delay(Math.min(delayMs, MAX_RETRY_DELAY_MS));
       }
     }
 
@@ -119,8 +121,9 @@ export class DiscordClient {
 
     // If this was the last request available, wait for reset
     if (remaining !== null && remaining <= 0 && resetAfter !== null) {
-      // Add a small buffer and cap at 60 seconds
-      const delayMs = Math.min((resetAfter + 1) * 1000, 60000);
+      // Add a small buffer and cap at max delay
+      const bufferSeconds = 1;
+      const delayMs = Math.min((resetAfter + bufferSeconds) * 1000, MAX_RETRY_DELAY_MS);
       await delay(delayMs);
     }
   }
@@ -166,13 +169,20 @@ export class DiscordClient {
   }
 
   /**
+   * Check if HTTP status code indicates success
+   */
+  private isSuccessStatusCode(statusCode: number): boolean {
+    return statusCode >= 200 && statusCode < 300;
+  }
+
+  /**
    * Get JSON response with error handling
    */
   private async getJsonResponse(url: string): Promise<Record<string, unknown>> {
     const response = await this.getAuthenticatedResponse(url);
     const body = await response.body.text();
 
-    if (!response.statusCode.toString().startsWith('2')) {
+    if (!this.isSuccessStatusCode(response.statusCode)) {
       switch (response.statusCode) {
         case 401:
           throw new DiscordChatExporterError(
@@ -211,7 +221,7 @@ export class DiscordClient {
       return null;
     }
 
-    if (!response.statusCode.toString().startsWith('2')) {
+    if (!this.isSuccessStatusCode(response.statusCode)) {
       throw new DiscordChatExporterError(
         `Request to '${url}' failed: ${response.statusCode}. Response: ${body}`,
         true
@@ -273,7 +283,7 @@ export class DiscordClient {
     while (true) {
       const url = new UrlBuilder()
         .setPath('users/@me/guilds')
-        .setQueryParameter('limit', '100')
+        .setQueryParameter('limit', String(PAGINATION_LIMIT))
         .setQueryParameter('after', currentAfter.toString())
         .build();
 
@@ -465,7 +475,7 @@ export class DiscordClient {
     while (true) {
       const url = new UrlBuilder()
         .setPath(`channels/${channelId}/messages`)
-        .setQueryParameter('limit', '100')
+        .setQueryParameter('limit', String(PAGINATION_LIMIT))
         .setQueryParameter('after', currentAfter.toString())
         .build();
 
@@ -541,7 +551,7 @@ export class DiscordClient {
         .setPath(
           `channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(reactionName)}`
         )
-        .setQueryParameter('limit', '100')
+        .setQueryParameter('limit', String(PAGINATION_LIMIT))
         .setQueryParameter('after', currentAfter.toString())
         .build();
 

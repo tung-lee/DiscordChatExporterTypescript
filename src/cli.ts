@@ -44,6 +44,24 @@ function clearLine(): void {
   process.stderr.write('\r\x1b[K');
 }
 
+/**
+ * Parse a date boundary argument (accepts snowflake ID or date string)
+ */
+function parseDateBoundary(value: string, optionName: string): Snowflake {
+  const snowflake = Snowflake.tryParse(value);
+  if (snowflake) {
+    return snowflake;
+  }
+
+  const date = new Date(value);
+  if (!isNaN(date.getTime())) {
+    return Snowflake.fromDate(date);
+  }
+
+  console.error(`Invalid ${optionName} value: ${value}`);
+  process.exit(1);
+}
+
 program
   .name('discord-chat-exporter')
   .description('Export Discord chat history to various formats')
@@ -86,35 +104,8 @@ program
       }
 
       // Parse date boundaries
-      let after: Snowflake | null = null;
-      let before: Snowflake | null = null;
-
-      if (options.after) {
-        // Try parsing as snowflake first, then as date
-        after = Snowflake.tryParse(options.after);
-        if (!after) {
-          const date = new Date(options.after);
-          if (!isNaN(date.getTime())) {
-            after = Snowflake.fromDate(date);
-          } else {
-            console.error(`Invalid --after value: ${options.after}`);
-            process.exit(1);
-          }
-        }
-      }
-
-      if (options.before) {
-        before = Snowflake.tryParse(options.before);
-        if (!before) {
-          const date = new Date(options.before);
-          if (!isNaN(date.getTime())) {
-            before = Snowflake.fromDate(date);
-          } else {
-            console.error(`Invalid --before value: ${options.before}`);
-            process.exit(1);
-          }
-        }
-      }
+      const after = options.after ? parseDateBoundary(options.after, '--after') : null;
+      const before = options.before ? parseDateBoundary(options.before, '--before') : null;
 
       // Parse filter
       let messageFilter = MessageFilter.Null;
