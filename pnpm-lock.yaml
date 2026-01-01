@@ -30,8 +30,8 @@ importers:
   packages/cli:
     dependencies:
       '@discord-chat-exporter/core':
-        specifier: workspace:*
-        version: link:../core
+        specifier: ^0.1.0
+        version: 0.1.0
       cli-progress:
         specifier: ^3.12.0
         version: 3.12.0
@@ -50,6 +50,10 @@ importers:
         version: 6.22.0
 
 packages:
+
+  '@discord-chat-exporter/core@0.1.0':
+    resolution: {integrity: sha512-iS693k7KMS7z0zZTUBowzFsBUe3ctp9TXZaxXkZgRtQd6WQHjh/WHvpVJgUq1Oxwa+TAXSUnr6NUkiMdgIFzYA==}
+    engines: {node: '>=20.0.0'}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1203,6 +1207,10 @@ packages:
     engines: {node: '>=10'}
 
 snapshots:
+
+  '@discord-chat-exporter/core@0.1.0':
+    dependencies:
+      undici: 6.22.0
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
