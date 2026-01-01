@@ -4,15 +4,22 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Name** | Discord Chat Exporter Core |
-| **Type** | TypeScript Library + CLI Tool |
+| **Name** | Discord Chat Exporter |
+| **Type** | TypeScript Monorepo (SDK + CLI) |
 | **Version** | 0.1.0 |
 | **License** | MIT |
 | **Node.js** | >= 20.0.0 |
 
+## Packages
+
+| Package | npm | Purpose |
+|---------|-----|---------|
+| `@discord-chat-exporter/core` | [npm](https://www.npmjs.com/package/@discord-chat-exporter/core) | SDK library for programmatic usage |
+| `@discord-chat-exporter/cli` | [npm](https://www.npmjs.com/package/@discord-chat-exporter/cli) | Command-line interface |
+
 ## Executive Summary
 
-Discord Chat Exporter Core is a high-performance TypeScript library and CLI tool for exporting Discord channel messages to multiple formats. It provides both programmatic API access for developers and a command-line interface for end users.
+Discord Chat Exporter is a high-performance TypeScript monorepo providing both a programmatic SDK and CLI tool for exporting Discord channel messages to multiple formats. The SDK (`@discord-chat-exporter/core`) enables developers to integrate export functionality into their applications, while the CLI (`@discord-chat-exporter/cli`) provides end-user access via the command line.
 
 ## Product Vision
 
@@ -26,9 +33,9 @@ Discord lacks native functionality to export chat history in portable formats. U
 
 ### Solution
 
-A dual-purpose tool that:
-1. **CLI Tool**: Enables users to export channels via command line
-2. **Library**: Provides programmatic API for integration into other applications
+A dual-package monorepo that provides:
+1. **SDK Library** (`@discord-chat-exporter/core`): Programmatic API for integration
+2. **CLI Tool** (`@discord-chat-exporter/cli`): Command-line interface for end users
 
 ## Core Features
 
@@ -81,11 +88,11 @@ A dual-purpose tool that:
 
 ### Dependencies
 
-| Category | Package | Purpose |
-|----------|---------|---------|
-| HTTP | undici | Discord API communication |
-| CLI | commander | Command-line parsing |
-| Progress | cli-progress | Export progress display |
+| Package | Dependency | Purpose |
+|---------|------------|---------|
+| core | undici | Discord API communication |
+| cli | commander | Command-line parsing |
+| cli | cli-progress | Export progress display |
 
 ### Authentication
 
@@ -117,7 +124,7 @@ discord-chat-exporter exportguild -t TOKEN -g GUILD_ID --threads
 
 **Usage:**
 ```typescript
-import { DiscordClient, ChannelExporter } from 'discord-chat-exporter-core';
+import { DiscordClient, ChannelExporter } from '@discord-chat-exporter/core';
 
 const client = new DiscordClient(token);
 const exporter = new ChannelExporter(client);
@@ -175,14 +182,14 @@ discord-chat-exporter export -t TOKEN -c DM_CHANNEL_ID
 
 ## API Design Principles
 
-### Library API
+### SDK API (`@discord-chat-exporter/core`)
 
 1. **Async-First**: All I/O operations return Promises
 2. **Generator-Based**: Large collections use async iterators
 3. **Immutable Models**: Data classes are read-only
 4. **Type-Safe**: Full TypeScript definitions
 
-### CLI Design
+### CLI Design (`@discord-chat-exporter/cli`)
 
 1. **Subcommand Structure**: `export`, `exportguild`, `guilds`, `channels`, `dms`
 2. **Consistent Options**: Same options across related commands
@@ -200,7 +207,7 @@ discord-chat-exporter export -t TOKEN -c DM_CHANNEL_ID
 
 ### Testability
 
-- Unit tests for utilities
+- Unit tests for utilities (89 tests)
 - Integration tests for exporters
 - Mock-friendly architecture
 - Vitest framework

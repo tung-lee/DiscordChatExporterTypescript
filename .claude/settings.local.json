@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm build:*)",
+      "Bash(pnpm test:run:*)",
+      "Bash(node packages/cli/dist/cli.js:*)",
+      "Bash(pnpm typecheck:*)"
+    ]
+  }
+}

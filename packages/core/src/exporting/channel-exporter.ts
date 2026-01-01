@@ -1,5 +1,7 @@
 import { DiscordClient, ProgressCallback } from '../discord/discord-client.js';
 import { ChannelKind } from '../discord/data/enums.js';
+import { Message } from '../discord/data/message.js';
+import { User } from '../discord/data/user.js';
 import {
   DiscordChatExporterError,
   ChannelEmptyError,

@@ -1,25 +1,22 @@
-#!/usr/bin/env node
-
 import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import { Snowflake } from './discord/snowflake.js';
-import { DiscordClient, ProgressCallback } from './discord/discord-client.js';
-import { Guild } from './discord/data/guild.js';
-import { Channel } from './discord/data/channel.js';
-import { ChannelKind } from './discord/data/enums.js';
 import {
+  Snowflake,
+  DiscordClient,
+  Guild,
+  Channel,
+  ChannelKind,
   ExportRequest,
   ChannelExporter,
   PartitionLimit,
   MessageFilter,
   parseExportFormat,
-} from './exporting/index.js';
-import {
   DiscordChatExporterError,
   ChannelEmptyError,
-} from './exceptions/index.js';
+  type ProgressCallback,
+} from '@discord-chat-exporter/core';
 
 const program = new Command();
 

@@ -4,144 +4,129 @@
 
 | Metric | Value |
 |--------|-------|
+| **Packages** | 2 (monorepo) |
 | **Source Files** | ~75 TypeScript files |
 | **Test Files** | 6 test files |
-| **Lines of Code** | ~8,000 LOC (estimated) |
-| **Dependencies** | 3 runtime, 7 dev |
+| **Lines of Code** | ~8,500 LOC (estimated) |
+| **Runtime Dependencies** | 3 (undici, commander, cli-progress) |
 
-## Directory Structure
+## Monorepo Structure
 
 ```
-discord-chat-exporter-core/
-├── src/                          # Source code
-│   ├── index.ts                  # Library entry point
-│   ├── cli.ts                    # CLI entry point (~500 lines)
+discord-chat-exporter/
+├── packages/
+│   ├── core/                         # @discord-chat-exporter/core (SDK)
+│   │   ├── src/
+│   │   │   ├── index.ts              # SDK entry point
+│   │   │   ├── discord/              # Discord API module
+│   │   │   │   ├── discord-client.ts # API client (~730 lines)
+│   │   │   │   ├── snowflake.ts      # ID handling (~120 lines)
+│   │   │   │   ├── token-kind.ts     # Auth token types
+│   │   │   │   ├── rate-limit-preference.ts
+│   │   │   │   └── data/             # Data models (~25 files)
+│   │   │   │       ├── enums.ts
+│   │   │   │       ├── user.ts, guild.ts, channel.ts
+│   │   │   │       ├── message.ts, member.ts, role.ts
+│   │   │   │       ├── attachment.ts, reaction.ts, sticker.ts
+│   │   │   │       └── embeds/       # Embed components
+│   │   │   │
+│   │   │   ├── exporting/            # Export system
+│   │   │   │   ├── channel-exporter.ts
+│   │   │   │   ├── message-exporter.ts
+│   │   │   │   ├── export-context.ts
+│   │   │   │   ├── export-request.ts
+│   │   │   │   ├── filtering/        # Message filters
+│   │   │   │   ├── partitioning/     # Output splitting
+│   │   │   │   └── writers/          # Format writers
+│   │   │   │       ├── json-message-writer.ts
+│   │   │   │       ├── html-message-writer.ts
+│   │   │   │       ├── csv-message-writer.ts
+│   │   │   │       └── plain-text-message-writer.ts
+│   │   │   │
+│   │   │   ├── markdown/             # Markdown parsing
+│   │   │   │   ├── nodes.ts
+│   │   │   │   ├── emoji-index.ts
+│   │   │   │   └── parsing/
+│   │   │   │       ├── markdown-parser.ts
+│   │   │   │       └── markdown-visitor.ts
+│   │   │   │
+│   │   │   ├── utils/                # Utilities
+│   │   │   │   ├── file-size.ts
+│   │   │   │   ├── color.ts
+│   │   │   │   └── http.ts
+│   │   │   │
+│   │   │   └── exceptions/           # Custom errors
+│   │   │       ├── discord-chat-exporter-error.ts
+│   │   │       └── channel-empty-error.ts
+│   │   │
+│   │   ├── tests/                    # Unit tests
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── tsup.config.ts
 │   │
-│   ├── discord/                  # Discord API module
-│   │   ├── discord-client.ts     # API client (~730 lines)
-│   │   ├── snowflake.ts          # ID handling (~120 lines)
-│   │   ├── token-kind.ts         # Auth token types
-│   │   ├── rate-limit-preference.ts
-│   │   ├── index.ts              # Module exports
-│   │   └── data/                 # Data models (~25 files)
-│   │       ├── enums.ts          # Discord enums
-│   │       ├── user.ts           # User model
-│   │       ├── guild.ts          # Guild model
-│   │       ├── channel.ts        # Channel model (~200 lines)
-│   │       ├── message.ts        # Message model (~330 lines)
-│   │       ├── member.ts         # Member model
-│   │       ├── role.ts           # Role model
-│   │       ├── attachment.ts     # Attachment model
-│   │       ├── reaction.ts       # Reaction model
-│   │       ├── sticker.ts        # Sticker model
-│   │       ├── emoji.ts          # Emoji model
-│   │       ├── invite.ts         # Invite model
-│   │       ├── application.ts    # Bot application
-│   │       ├── interaction.ts    # Slash command interaction
-│   │       ├── message-reference.ts
-│   │       ├── embeds/           # Embed components
-│   │       │   ├── embed.ts
-│   │       │   ├── embed-author.ts
-│   │       │   ├── embed-field.ts
-│   │       │   ├── embed-footer.ts
-│   │       │   ├── embed-image.ts
-│   │       │   └── embed-video.ts
-│   │       └── common/
-│   │           ├── has-id.ts     # ID interface
-│   │           └── image-cdn.ts  # CDN URL builders
-│   │
-│   ├── exporting/                # Export system
-│   │   ├── export-format.ts      # Format enum
-│   │   ├── export-request.ts     # Export config (~200 lines)
-│   │   ├── export-context.ts     # Export state/cache (~250 lines)
-│   │   ├── export-asset-downloader.ts
-│   │   ├── message-exporter.ts   # Message writing
-│   │   ├── channel-exporter.ts   # Main orchestrator (~150 lines)
-│   │   ├── index.ts              # Module exports
-│   │   ├── partitioning/
-│   │   │   ├── partition-limit.ts
-│   │   │   └── index.ts
-│   │   ├── filtering/
-│   │   │   ├── message-filter.ts (~200 lines)
-│   │   │   ├── filter-grammar.ts (~150 lines)
-│   │   │   └── index.ts
-│   │   └── writers/              # Format-specific writers
-│   │       ├── message-writer.ts           # Base class
-│   │       ├── message-writer-factory.ts   # Factory
-│   │       ├── plain-text-message-writer.ts
-│   │       ├── csv-message-writer.ts
-│   │       ├── json-message-writer.ts
-│   │       ├── html-message-writer.ts (~800 lines)
-│   │       ├── plain-text-markdown-visitor.ts
-│   │       ├── html-markdown-visitor.ts (~400 lines)
-│   │       ├── html/
-│   │       │   └── styles.ts     # CSS styles
-│   │       └── index.ts
-│   │
-│   ├── markdown/                 # Markdown parsing
-│   │   ├── formatting-kind.ts    # Format types enum
-│   │   ├── mention-kind.ts       # Mention types enum
-│   │   ├── nodes.ts              # AST node classes (~200 lines)
-│   │   ├── emoji-index.ts        # Emoji name mappings
-│   │   ├── index.ts              # Module exports
-│   │   └── parsing/
-│   │       ├── markdown-parser.ts    (~500 lines)
-│   │       ├── markdown-visitor.ts
-│   │       ├── matcher.ts
-│   │       ├── string-matcher.ts
-│   │       ├── regex-matcher.ts
-│   │       ├── aggregate-matcher.ts
-│   │       ├── string-segment.ts
-│   │       ├── parsed-match.ts
-│   │       └── index.ts
-│   │
-│   ├── utils/                    # Utilities
-│   │   ├── file-size.ts          # FileSize class
-│   │   ├── color.ts              # Color class
-│   │   ├── extensions.ts         # Helper functions
-│   │   ├── url.ts                # URL utilities
-│   │   ├── http.ts               # HTTP client config
-│   │   └── index.ts
-│   │
-│   └── exceptions/               # Custom errors
-│       ├── discord-chat-exporter-error.ts
-│       ├── channel-empty-error.ts
-│       ├── unsupported-channel-error.ts
-│       └── index.ts
+│   └── cli/                          # @discord-chat-exporter/cli
+│       ├── src/
+│       │   └── cli.ts                # CLI implementation (~500 lines)
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── tsup.config.ts
 │
-├── tests/                        # Unit tests
-│   ├── discord/
-│   │   └── snowflake.test.ts
-│   ├── utils/
-│   │   ├── file-size.test.ts
-│   │   └── color.test.ts
-│   └── exporting/
-│       ├── export-format.test.ts
-│       ├── partition-limit.test.ts
-│       └── message-filter.test.ts
-│
-├── dist/                         # Build output
-├── docs/                         # Documentation
-├── plans/                        # Planning documents
-├── source_ref/                   # Reference materials
-│
-├── package.json                  # Project manifest
-├── tsconfig.json                 # TypeScript config
-├── tsup.config.ts                # Build config
-├── vitest.config.ts              # Test config
-├── README.md                     # Main documentation
-├── EXAMPLES.md                   # Usage examples
-├── PERFORMANCE.md                # Performance guide
-└── LICENSE                       # MIT license
+├── docs/                             # Documentation
+├── plans/                            # Planning documents
+├── pnpm-workspace.yaml               # Workspace definition
+├── tsconfig.base.json                # Shared TypeScript config
+├── package.json                      # Root package (scripts)
+├── README.md
+├── EXAMPLES.md
+├── PERFORMANCE.md
+└── LICENSE
 ```
+
+## Package Overview
+
+### @discord-chat-exporter/core
+
+**Purpose:** TypeScript SDK for exporting Discord chat history
+
+| Aspect | Details |
+|--------|---------|
+| **npm** | https://www.npmjs.com/package/@discord-chat-exporter/core |
+| **Entry** | `dist/index.js` (ESM) / `dist/index.cjs` (CJS) |
+| **Types** | `dist/index.d.ts` |
+| **Dependencies** | undici |
+| **Size** | ~257 KB (packed) |
+
+**Public Exports:**
+- `DiscordClient` - API client class
+- `ChannelExporter` - Export orchestrator
+- `Snowflake` - Discord ID wrapper
+- `ExportRequest`, `ExportFormat` - Export configuration
+- `MessageFilter`, `PartitionLimit` - Export options
+- 25+ data model classes (User, Guild, Channel, Message, etc.)
+
+### @discord-chat-exporter/cli
+
+**Purpose:** Command-line interface for Discord chat export
+
+| Aspect | Details |
+|--------|---------|
+| **npm** | https://www.npmjs.com/package/@discord-chat-exporter/cli |
+| **Binary** | `discord-chat-exporter` |
+| **Dependencies** | @discord-chat-exporter/core, commander, cli-progress |
+| **Size** | ~8 KB (packed) |
+
+**Commands:**
+- `export` - Export channel(s) to file
+- `exportguild` - Export all channels in a guild
+- `guilds` - List available guilds
+- `channels` - List channels in a guild
+- `dms` - List direct message channels
 
 ## Module Breakdown
 
-### 1. Discord Module (`src/discord/`)
+### 1. Discord Module (`packages/core/src/discord/`)
 
 **Purpose:** Discord API client and data models
-
-**Key Components:**
 
 | File | Responsibility |
 |------|----------------|
@@ -149,172 +134,73 @@ discord-chat-exporter-core/
 | `snowflake.ts` | 64-bit Discord ID handling with BigInt |
 | `data/*.ts` | Immutable data classes for Discord entities |
 
-**Public Exports:**
-- `DiscordClient` - API client class
-- `Snowflake` - ID wrapper class
-- `TokenKind` - User/Bot enum
-- `RateLimitPreference` - Rate limit config
-- 25+ data model classes
-
-### 2. Exporting Module (`src/exporting/`)
+### 2. Exporting Module (`packages/core/src/exporting/`)
 
 **Purpose:** Export orchestration and format writing
 
-**Key Components:**
-
 | File | Responsibility |
 |------|----------------|
-| `channel-exporter.ts` | Main export orchestration |
+| `channel-exporter.ts` | Main export orchestration, batch processing |
 | `message-exporter.ts` | File writing with partitioning |
 | `export-context.ts` | State management and caching |
-| `export-request.ts` | Configuration container |
 | `writers/*.ts` | Format-specific implementations |
 
-**Public Exports:**
-- `ChannelExporter` - Main exporter class
-- `ExportRequest` - Configuration class
-- `ExportFormat` - Format enum
-- `MessageFilter` - Filter abstraction
-- `PartitionLimit` - Partition strategy
-
-### 3. Markdown Module (`src/markdown/`)
+### 3. Markdown Module (`packages/core/src/markdown/`)
 
 **Purpose:** Discord markdown parsing and rendering
-
-**Key Components:**
 
 | File | Responsibility |
 |------|----------------|
 | `markdown-parser.ts` | Text to AST conversion |
 | `markdown-visitor.ts` | AST traversal base class |
 | `nodes.ts` | AST node definitions |
-| `matcher.ts` | Pattern matching framework |
 
-**Public Exports:**
-- `parse()` / `parseMinimal()` - Parser functions
-- `MarkdownNode` types - AST nodes
-- `MarkdownVisitor` - Base visitor class
-- `FormattingKind` / `MentionKind` - Enums
+### 4. CLI Module (`packages/cli/src/`)
 
-### 4. Utils Module (`src/utils/`)
-
-**Purpose:** Cross-cutting utility functions
-
-**Key Components:**
+**Purpose:** Command-line interface
 
 | File | Responsibility |
 |------|----------------|
-| `file-size.ts` | Byte size formatting/parsing |
-| `color.ts` | RGB color handling |
-| `http.ts` | HTTP client with retry |
-| `url.ts` | URL building utilities |
-| `extensions.ts` | General helpers |
+| `cli.ts` | Commander.js-based CLI with 5 commands |
 
-**Public Exports:**
-- `FileSize` - Size wrapper class
-- `Color` - Color wrapper class
-- Various utility functions
-
-### 5. Exceptions Module (`src/exceptions/`)
-
-**Purpose:** Domain-specific error types
-
-**Exception Hierarchy:**
-```
-Error
-└── DiscordChatExporterError (isFatal: boolean)
-    ├── ChannelEmptyError (non-fatal)
-    └── UnsupportedChannelError (fatal)
-```
-
-## Key Files by Importance
-
-### Critical Files (Core Logic)
-
-1. **`src/discord/discord-client.ts`** - API communication
-2. **`src/exporting/channel-exporter.ts`** - Export orchestration
-3. **`src/discord/data/message.ts`** - Message data model
-4. **`src/markdown/parsing/markdown-parser.ts`** - Markdown parsing
-5. **`src/cli.ts`** - CLI interface
-
-### High-Value Files (Format Output)
-
-1. **`src/exporting/writers/html-message-writer.ts`** - HTML export
-2. **`src/exporting/writers/json-message-writer.ts`** - JSON export
-3. **`src/exporting/writers/html-markdown-visitor.ts`** - HTML markdown
-
-### Supporting Files
-
-1. **`src/exporting/export-context.ts`** - Caching layer
-2. **`src/exporting/filtering/message-filter.ts`** - Filtering
-3. **`src/exporting/partitioning/partition-limit.ts`** - Partitioning
-
-## Data Flow Summary
+## Data Flow
 
 ```
-CLI Input
+CLI (@discord-chat-exporter/cli)
     │
     ▼
-┌───────────────────┐
-│   ExportRequest   │  Configuration
-└─────────┬─────────┘
-          │
-          ▼
-┌───────────────────┐
-│  ChannelExporter  │  Orchestration
-└─────────┬─────────┘
-          │
-          ▼
-┌───────────────────┐
-│   DiscordClient   │  API Communication
-└─────────┬─────────┘
-          │
-          ▼
-┌───────────────────┐
-│   ExportContext   │  Caching & State
-└─────────┬─────────┘
-          │
-          ▼
-┌───────────────────┐
-│  MessageExporter  │  File Management
-└─────────┬─────────┘
-          │
-          ▼
-┌───────────────────┐
-│  MessageWriter    │  Format-Specific
-└─────────┬─────────┘
-          │
-          ▼
-    Output File(s)
+┌───────────────────────────────────────────────────────┐
+│          @discord-chat-exporter/core                   │
+│                                                        │
+│  ExportRequest ──► ChannelExporter ──► DiscordClient  │
+│                          │                             │
+│                          ▼                             │
+│                   ExportContext (caching)              │
+│                          │                             │
+│                          ▼                             │
+│                   MessageExporter                      │
+│                          │                             │
+│                          ▼                             │
+│                   MessageWriter (JSON/HTML/CSV/TXT)    │
+└───────────────────────────────────────────────────────┘
+    │
+    ▼
+Output File(s)
 ```
 
-## Dependency Graph (Internal)
+## Dependency Graph
 
 ```
-cli.ts ─────────────────────────────────────────────┐
-    │                                               │
-    ├──► discord/discord-client.ts                  │
-    │        │                                      │
-    │        └──► discord/data/* (all models)      │
-    │                 │                             │
-    │                 └──► utils/http.ts            │
-    │                                               │
-    ├──► exporting/channel-exporter.ts              │
-    │        │                                      │
-    │        ├──► exporting/message-exporter.ts     │
-    │        │        │                             │
-    │        │        └──► exporting/writers/*      │
-    │        │                  │                   │
-    │        │                  └──► markdown/*     │
-    │        │                                      │
-    │        ├──► exporting/export-context.ts       │
-    │        │                                      │
-    │        └──► exporting/filtering/*             │
-    │                                               │
-    └──► utils/* ◄──────────────────────────────────┘
+@discord-chat-exporter/cli
+    │
+    ├── @discord-chat-exporter/core (workspace:*)
+    │       └── undici@^6.21.0
+    │
+    ├── commander@^12.1.0
+    └── cli-progress@^3.12.0
 ```
 
-## Test Coverage Areas
+## Test Coverage
 
 | Module | Test Focus |
 |--------|-----------|
@@ -329,10 +215,21 @@ cli.ts ────────────────────────�
 
 | File | Purpose |
 |------|---------|
-| `package.json` | Dependencies, scripts, metadata |
-| `tsconfig.json` | TypeScript strict mode config |
-| `tsup.config.ts` | Dual ESM/CJS build |
-| `vitest.config.ts` | Test runner config |
+| `pnpm-workspace.yaml` | Monorepo workspace definition |
+| `tsconfig.base.json` | Shared TypeScript strict config |
+| `packages/*/package.json` | Package-specific dependencies |
+| `packages/*/tsconfig.json` | Package TypeScript config |
+| `packages/*/tsup.config.ts` | Package build config |
+| `packages/core/vitest.config.ts` | Test runner config |
+
+## Build Outputs
+
+| Package | Format | Output |
+|---------|--------|--------|
+| core | ESM | `dist/index.js` (172 KB) |
+| core | CJS | `dist/index.cjs` (175 KB) |
+| core | Types | `dist/index.d.ts` (55 KB) |
+| cli | ESM | `dist/cli.js` (13 KB) |
 
 ---
 

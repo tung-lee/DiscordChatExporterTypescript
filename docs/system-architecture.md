@@ -2,57 +2,98 @@
 
 ## Architecture Overview
 
-Discord Chat Exporter follows a layered architecture with clear separation of concerns:
+Discord Chat Exporter is a pnpm monorepo with two packages following a layered architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         CLI Layer                                │
-│                        (cli.ts)                                  │
+│                    @discord-chat-exporter/cli                    │
+│                     (packages/cli/src/cli.ts)                    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Export Layer                                │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐   │
-│  │ChannelExporter│  │MessageExporter│  │  ExportContext    │   │
-│  └───────────────┘  └───────────────┘  └───────────────────┘   │
-│                              │                                   │
-│  ┌───────────────────────────┴───────────────────────────┐     │
-│  │               Message Writers                          │     │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────────┐ │     │
-│  │  │  JSON  │ │  HTML  │ │  CSV   │ │   PlainText    │ │     │
-│  │  └────────┘ └────────┘ └────────┘ └────────────────┘ │     │
-│  └────────────────────────────────────────────────────────┘     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Discord Layer                                │
+│                   @discord-chat-exporter/core                    │
+│                      (packages/core/src/)                        │
 │  ┌───────────────────────────────────────────────────────────┐ │
-│  │                    DiscordClient                           │ │
-│  │  • API Communication    • Rate Limiting                   │ │
-│  │  • Pagination          • Retry Logic                      │ │
+│  │                      Export Layer                          │ │
+│  │  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  │ │
+│  │  │ChannelExporter│  │MessageExporter│  │ ExportContext │  │ │
+│  │  └───────────────┘  └───────────────┘  └───────────────┘  │ │
+│  │                              │                              │ │
+│  │  ┌───────────────────────────┴───────────────────────────┐ │ │
+│  │  │               Message Writers                          │ │ │
+│  │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────────┐ │ │ │
+│  │  │  │  JSON  │ │  HTML  │ │  CSV   │ │   PlainText    │ │ │ │
+│  │  │  └────────┘ └────────┘ └────────┘ └────────────────┘ │ │ │
+│  │  └────────────────────────────────────────────────────────┘ │ │
 │  └───────────────────────────────────────────────────────────┘ │
 │                              │                                   │
-│  ┌───────────────────────────┴───────────────────────────┐     │
-│  │                   Data Models                          │     │
-│  │  Message, User, Channel, Guild, Role, Embed, etc.     │     │
-│  └────────────────────────────────────────────────────────┘     │
+│  ┌───────────────────────────┴───────────────────────────────┐ │
+│  │                     Discord Layer                          │ │
+│  │  ┌───────────────────────────────────────────────────────┐ │ │
+│  │  │                    DiscordClient                       │ │ │
+│  │  │  • API Communication    • Rate Limiting               │ │ │
+│  │  │  • Pagination          • Retry Logic                  │ │ │
+│  │  └───────────────────────────────────────────────────────┘ │ │
+│  │                              │                              │ │
+│  │  ┌───────────────────────────┴───────────────────────────┐ │ │
+│  │  │                   Data Models                          │ │ │
+│  │  │  Message, User, Channel, Guild, Role, Embed, etc.     │ │ │
+│  │  └────────────────────────────────────────────────────────┘ │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                              │                                   │
+│  ┌───────────────────────────┴───────────────────────────────┐ │
+│  │                   Supporting Layers                        │ │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────────────┐   │ │
+│  │  │  Markdown  │  │   Utils    │  │    Exceptions      │   │ │
+│  │  │  Parser    │  │            │  │                    │   │ │
+│  │  └────────────┘  └────────────┘  └────────────────────┘   │ │
+│  └───────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Supporting Layers                              │
-│  ┌────────────┐  ┌────────────┐  ┌────────────────────────┐    │
-│  │  Markdown  │  │   Utils    │  │      Exceptions        │    │
-│  │  Parser    │  │            │  │                        │    │
-│  └────────────┘  └────────────┘  └────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
+```
+
+## Package Structure
+
+### @discord-chat-exporter/cli
+
+```
+packages/cli/
+├── src/
+│   └── cli.ts           # CLI implementation (~500 lines)
+├── package.json
+├── tsconfig.json
+└── tsup.config.ts
+```
+
+### @discord-chat-exporter/core
+
+```
+packages/core/
+├── src/
+│   ├── index.ts         # Public exports
+│   ├── discord/         # Discord API client & data models
+│   │   ├── discord-client.ts
+│   │   ├── snowflake.ts
+│   │   └── data/        # 25+ data model files
+│   ├── exporting/       # Export orchestration
+│   │   ├── channel-exporter.ts
+│   │   ├── message-exporter.ts
+│   │   ├── export-context.ts
+│   │   ├── filtering/   # Message filters
+│   │   ├── partitioning/# Output splitting
+│   │   └── writers/     # Format writers
+│   ├── markdown/        # Markdown parsing
+│   ├── utils/           # Utilities
+│   └── exceptions/      # Custom errors
+├── tests/               # Unit tests
+├── package.json
+├── tsconfig.json
+└── tsup.config.ts
 ```
 
 ## Component Responsibilities
 
-### CLI Layer (`src/cli.ts`)
+### CLI Layer (`packages/cli/src/cli.ts`)
 
 Entry point for command-line usage:
 - Parses command-line arguments using Commander
@@ -60,7 +101,7 @@ Entry point for command-line usage:
 - Orchestrates export operations
 - Displays progress and handles errors
 
-### Export Layer (`src/exporting/`)
+### Export Layer (`packages/core/src/exporting/`)
 
 #### ChannelExporter
 Main orchestrator for export operations:
@@ -89,7 +130,7 @@ Format-specific output generators:
 - `CsvMessageWriter` - Tabular CSV format
 - `PlainTextMessageWriter` - Simple text output
 
-### Discord Layer (`src/discord/`)
+### Discord Layer (`packages/core/src/discord/`)
 
 #### DiscordClient
 HTTP client for Discord API:
@@ -98,7 +139,7 @@ HTTP client for Discord API:
 - Provides async generators for pagination
 - Manages retry logic for transient failures
 
-#### Data Models (`src/discord/data/`)
+#### Data Models (`packages/core/src/discord/data/`)
 Immutable representations of Discord entities:
 - All properties are `readonly`
 - Static `parse()` methods for JSON deserialization
@@ -107,20 +148,20 @@ Immutable representations of Discord entities:
 
 ### Supporting Layers
 
-#### Markdown Module (`src/markdown/`)
+#### Markdown Module (`packages/core/src/markdown/`)
 Discord-flavored markdown parser:
 - Converts text to AST nodes
 - Handles Discord-specific syntax (mentions, emoji)
 - Visitor pattern for format conversion
 
-#### Utils Module (`src/utils/`)
+#### Utils Module (`packages/core/src/utils/`)
 Cross-cutting utilities:
 - `FileSize` - Byte size handling
 - `Color` - RGB color manipulation
 - HTTP client configuration
 - URL building helpers
 
-#### Exceptions Module (`src/exceptions/`)
+#### Exceptions Module (`packages/core/src/exceptions/`)
 Domain-specific error types:
 - `DiscordChatExporterError` - Base with fatal flag
 - `ChannelEmptyError` - Non-fatal, empty channel
@@ -174,6 +215,18 @@ Domain-specific error types:
 │   Output    │ ◄── │  Markdown   │ ◄── │   Member    │
 │    File     │     │  Rendering  │     │ Resolution  │
 └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+## Package Dependency Graph
+
+```
+@discord-chat-exporter/cli
+    │
+    ├── @discord-chat-exporter/core (workspace:*)
+    │       └── undici@^6.21.0
+    │
+    ├── commander@^12.1.0
+    └── cli-progress@^3.12.0
 ```
 
 ## Design Patterns
@@ -347,6 +400,29 @@ Error
 - Streaming file writes for large exports
 - Partition support for splitting very large exports
 - Asset downloads with retry and fallback
+
+## Build Configuration
+
+### Dual Format Output
+
+Both packages build to ESM and CJS:
+
+| Package | Format | Output |
+|---------|--------|--------|
+| core | ESM | `dist/index.js` |
+| core | CJS | `dist/index.cjs` |
+| core | Types | `dist/index.d.ts` |
+| cli | ESM | `dist/cli.js` |
+
+### TypeScript Project References
+
+```json
+// packages/cli/tsconfig.json
+{
+  "extends": "../../tsconfig.base.json",
+  "references": [{ "path": "../core" }]
+}
+```
 
 ## Security Model
 

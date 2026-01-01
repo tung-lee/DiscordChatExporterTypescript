@@ -2,6 +2,9 @@
 
 A high-performance TypeScript library and CLI tool for exporting Discord chat history to various formats.
 
+[![npm](https://img.shields.io/npm/v/@discord-chat-exporter/core)](https://www.npmjs.com/package/@discord-chat-exporter/core)
+[![npm](https://img.shields.io/npm/v/@discord-chat-exporter/cli)](https://www.npmjs.com/package/@discord-chat-exporter/cli)
+
 ## Features
 
 - **Multiple Export Formats** - HTML (Dark/Light), JSON, Plain Text, CSV
@@ -10,16 +13,33 @@ A high-performance TypeScript library and CLI tool for exporting Discord chat hi
 - **Asset Management** - Download and archive media files with reuse support
 - **Advanced Features** - Partition large exports, export entire guilds, thread support
 
+## Packages
+
+This is a monorepo containing two packages:
+
+| Package | Description | npm |
+|---------|-------------|-----|
+| [@discord-chat-exporter/core](./packages/core) | SDK library for programmatic usage | [![npm](https://img.shields.io/npm/v/@discord-chat-exporter/core)](https://www.npmjs.com/package/@discord-chat-exporter/core) |
+| [@discord-chat-exporter/cli](./packages/cli) | Command-line interface | [![npm](https://img.shields.io/npm/v/@discord-chat-exporter/cli)](https://www.npmjs.com/package/@discord-chat-exporter/cli) |
+
 ## Installation
 
+### CLI Tool
+
 ```bash
-npm install discord-chat-exporter-core
+npm install -g @discord-chat-exporter/cli
 ```
 
 Or use directly with npx:
 
 ```bash
-npx discord-chat-exporter-core --help
+npx @discord-chat-exporter/cli --help
+```
+
+### SDK Library
+
+```bash
+npm install @discord-chat-exporter/core
 ```
 
 ## Quick Start
@@ -41,7 +61,12 @@ discord-chat-exporter export -t "YOUR_TOKEN" -c "CHANNEL_ID" \
 ### Library Usage
 
 ```typescript
-import { DiscordClient, ChannelExporter, ExportRequest, ExportFormat } from 'discord-chat-exporter-core';
+import {
+  DiscordClient,
+  ChannelExporter,
+  ExportRequest,
+  ExportFormat,
+} from '@discord-chat-exporter/core';
 
 const client = new DiscordClient('YOUR_TOKEN');
 const exporter = new ChannelExporter(client);
@@ -119,40 +144,46 @@ await exporter.exportChannel(request, (progress) => {
 | [PERFORMANCE.md](./PERFORMANCE.md) | Performance optimization guide |
 | [docs/project-overview-pdr.md](./docs/project-overview-pdr.md) | Product development requirements |
 | [docs/codebase-summary.md](./docs/codebase-summary.md) | Codebase structure summary |
-| [docs/code-standards.md](./docs/code-standards.md) | Coding standards and conventions |
 | [docs/system-architecture.md](./docs/system-architecture.md) | System architecture overview |
 
 ## Project Structure
 
 ```
 discord-chat-exporter/
-├── src/
-│   ├── cli.ts              # CLI entry point
-│   ├── index.ts            # Library entry point
-│   ├── discord/            # Discord API client & data models
-│   ├── exporting/          # Export logic & format writers
-│   ├── markdown/           # Markdown parsing
-│   ├── utils/              # Utility functions
-│   └── exceptions/         # Custom error types
-├── tests/                  # Unit tests
-├── docs/                   # Documentation
-└── dist/                   # Compiled output
+├── packages/
+│   ├── core/                    # @discord-chat-exporter/core (SDK)
+│   │   ├── src/
+│   │   │   ├── index.ts         # SDK entry point
+│   │   │   ├── discord/         # Discord API client & data models
+│   │   │   ├── exporting/       # Export logic & format writers
+│   │   │   ├── markdown/        # Markdown parsing
+│   │   │   ├── utils/           # Utility functions
+│   │   │   └── exceptions/      # Custom error types
+│   │   └── tests/               # Unit tests
+│   │
+│   └── cli/                     # @discord-chat-exporter/cli
+│       └── src/
+│           └── cli.ts           # CLI implementation
+│
+├── docs/                        # Documentation
+├── pnpm-workspace.yaml          # Workspace definition
+└── tsconfig.base.json           # Shared TypeScript config
 ```
 
 ## Development
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
-# Build
-npm run build
+# Build all packages
+pnpm build
 
 # Run tests
-npm test
+pnpm test
 
 # Type check
-npm run typecheck
+pnpm typecheck
 ```
 
 ## Performance
