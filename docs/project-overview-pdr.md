@@ -17,6 +17,17 @@
 | `@discord-chat-exporter/core` | [npm](https://www.npmjs.com/package/@discord-chat-exporter/core) | SDK library for programmatic usage |
 | `@discord-chat-exporter/cli` | [npm](https://www.npmjs.com/package/@discord-chat-exporter/cli) | Command-line interface |
 
+## Project Background
+
+This project is a **TypeScript port** of the original [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter) created by [Tyrrrz](https://github.com/Tyrrrz). The original application, written in C#/.NET, has been the leading tool for Discord chat export functionality since its inception.
+
+This TypeScript implementation brings the same powerful feature set to the Node.js ecosystem, enabling:
+- Native integration with JavaScript/TypeScript applications
+- Cross-platform usage without .NET runtime dependency
+- NPM-based distribution for easy installation
+
+All architectural decisions, export format designs, and core feature concepts are derived from the original C# implementation. We are grateful to Tyrrrz for creating and maintaining the original project.
+
 ## Executive Summary
 
 Discord Chat Exporter is a high-performance TypeScript monorepo providing both a programmatic SDK and CLI tool for exporting Discord channel messages to multiple formats. The SDK (`@discord-chat-exporter/core`) enables developers to integrate export functionality into their applications, while the CLI (`@discord-chat-exporter/cli`) provides end-user access via the command line.

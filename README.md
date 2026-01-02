@@ -219,8 +219,9 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Acknowledgments
 
-- Inspired by [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter) by Tyrrrz
-- Built with [Undici](https://github.com/nodejs/undici) and [Commander.js](https://github.com/tj/commander.js)
+This project is a TypeScript port of [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter), the original C# application created by [Tyrrrz](https://github.com/Tyrrrz). The original project provides a comprehensive solution for exporting Discord chat history and served as the architectural foundation and feature reference for this TypeScript implementation.
+
+All credit for the core concepts, export format designs, and feature set goes to the original project.
 
 ---
 

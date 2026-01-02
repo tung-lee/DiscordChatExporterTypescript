@@ -1,5 +1,16 @@
 # Codebase Summary
 
+## Project Origin
+
+This codebase is a **TypeScript port** of the original [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter) by [Tyrrrz](https://github.com/Tyrrrz), which was written in C#/.NET. The conversion to TypeScript enables native Node.js integration while preserving the original project's architecture and feature set.
+
+Key aspects carried over from the C# implementation:
+- Export format specifications (HTML, JSON, CSV, Plain Text)
+- Discord API client design with rate limiting and pagination
+- Message filtering expression syntax
+- Partition strategies for large exports
+- Markdown parsing for Discord-specific syntax
+
 ## Project Statistics
 
 | Metric | Value |
