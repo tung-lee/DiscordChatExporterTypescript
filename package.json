@@ -1,6 +1,6 @@
 {
   "name": "@discord-chat-exporter/monorepo",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "Discord Chat Exporter - TypeScript monorepo",
   "type": "module",
