@@ -46,7 +46,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "undici": "^6.21.0"
+    "undici": "^6.23.0"
   },
   "publishConfig": {
     "access": "public"
