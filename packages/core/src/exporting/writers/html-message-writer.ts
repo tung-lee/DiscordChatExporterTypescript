@@ -4,6 +4,7 @@ import { getStyles } from './html/styles.js';
 import { ExportContext } from '../export-context.js';
 import { ExportFormat } from '../export-format.js';
 import { Message } from '../../discord/data/message.js';
+import { MessageSnapshot } from '../../discord/data/message-snapshot.js';
 import { Embed } from '../../discord/data/embeds/embed.js';
 
 /**
@@ -206,6 +207,11 @@ function scrollToMessage(e, id) {
       }
       this.writeLine('</div>');
 
+      // Forwarded message
+      if (message.forwardedMessage) {
+        await this.writeForwardedMessage(message.forwardedMessage);
+      }
+
       // Attachments
       for (const attachment of message.attachments) {
         const url = await this.context.resolveAssetUrl(attachment.url);
@@ -349,6 +355,53 @@ function scrollToMessage(e, id) {
         embed.thumbnail.proxyUrl ?? embed.thumbnail.url
       );
       this.writeLine(`<img class="chatlog__embed-thumbnail" src="${htmlEncode(thumbnailUrl)}" alt="">`);
+    }
+
+    this.writeLine('</div>');
+  }
+
+  private async writeForwardedMessage(forwardedMessage: MessageSnapshot): Promise<void> {
+    this.writeLine('<div class="chatlog__forwarded">');
+    this.writeLine('<div class="chatlog__forwarded-header">Forwarded Message</div>');
+
+    // Content
+    if (forwardedMessage.content.trim()) {
+      this.writeLine(`<div class="chatlog__forwarded-content">${await this.formatMarkdown(forwardedMessage.content)}</div>`);
+    }
+
+    // Attachments
+    for (const attachment of forwardedMessage.attachments) {
+      const url = await this.context.resolveAssetUrl(attachment.url);
+      const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(attachment.fileName);
+      const isVideo = /\.(mp4|mov|avi|webm)$/i.test(attachment.fileName);
+
+      if (isImage) {
+        this.writeLine('<div class="chatlog__attachment chatlog__attachment--image">');
+        this.writeLine(`<img src="${htmlEncode(url)}" alt="${htmlEncode(attachment.fileName)}">`);
+        this.writeLine('</div>');
+      } else if (isVideo) {
+        this.writeLine('<div class="chatlog__attachment chatlog__attachment--video">');
+        this.writeLine(`<video controls src="${htmlEncode(url)}"></video>`);
+        this.writeLine('</div>');
+      } else {
+        this.writeLine('<div class="chatlog__attachment">');
+        this.writeLine(`<a href="${htmlEncode(url)}">${htmlEncode(attachment.fileName)}</a>`);
+        this.writeLine(` (${attachment.fileSize.format()})`);
+        this.writeLine('</div>');
+      }
+    }
+
+    // Embeds
+    for (const embed of forwardedMessage.embeds) {
+      await this.writeEmbed(embed);
+    }
+
+    // Stickers
+    for (const sticker of forwardedMessage.stickers) {
+      const stickerUrl = await this.context.resolveAssetUrl(sticker.sourceUrl);
+      this.writeLine('<div class="chatlog__sticker">');
+      this.writeLine(`<img src="${htmlEncode(stickerUrl)}" alt="${htmlEncode(sticker.name)}" title="${htmlEncode(sticker.name)}">`);
+      this.writeLine('</div>');
     }
 
     this.writeLine('</div>');

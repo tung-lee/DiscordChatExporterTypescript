@@ -10,8 +10,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Whitney", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  background-color: ${isDark ? '#36393f' : '#ffffff'};
+  font-size: 17px;
+  background-color: ${isDark ? '#36393e' : '#ffffff'};
   color: ${isDark ? '#dcddde' : '#2e3338'};
 }
 
@@ -159,6 +159,27 @@ img {
 .chatlog__reply-author {
   font-weight: 600;
   margin-right: 8px;
+}
+
+/* Forwarded message */
+.chatlog__forwarded {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-left: 4px solid ${isDark ? '#4f545c' : '#c4c9ce'};
+  border-radius: 4px;
+  background-color: ${isDark ? '#2f3136' : '#f2f3f5'};
+}
+
+.chatlog__forwarded-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: ${isDark ? '#b9bbbe' : '#72767d'};
+  margin-bottom: 4px;
+}
+
+.chatlog__forwarded-content {
+  margin-top: 4px;
+  word-wrap: break-word;
 }
 
 /* Attachments */

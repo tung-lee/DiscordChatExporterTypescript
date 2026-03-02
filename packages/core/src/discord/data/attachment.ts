@@ -10,6 +10,7 @@ export class Attachment implements HasId {
   readonly id: Snowflake;
   readonly url: string;
   readonly fileName: string;
+  readonly description: string | null;
   readonly fileSize: FileSize;
   readonly width: number | null;
   readonly height: number | null;
@@ -18,6 +19,7 @@ export class Attachment implements HasId {
     id: Snowflake,
     url: string,
     fileName: string,
+    description: string | null,
     fileSize: FileSize,
     width: number | null,
     height: number | null
@@ -25,6 +27,7 @@ export class Attachment implements HasId {
     this.id = id;
     this.url = url;
     this.fileName = fileName;
+    this.description = description;
     this.fileSize = fileSize;
     this.width = width;
     this.height = height;
@@ -50,7 +53,7 @@ export class Attachment implements HasId {
    * Whether this attachment is a video
    */
   get isVideo(): boolean {
-    const videoExts = ['mp4', 'webm', 'mov', 'avi', 'mkv'];
+    const videoExts = ['gifv', 'mp4', 'webm', 'mov', 'avi', 'mkv'];
     return videoExts.includes(this.fileExtension);
   }
 
@@ -76,10 +79,12 @@ export class Attachment implements HasId {
     const id = Snowflake.parse(json['id'] as string);
     const url = json['url'] as string;
     const fileName = json['filename'] as string;
+    const descriptionStr = json['description'] as string | null | undefined;
+    const description = descriptionStr?.trim() ? descriptionStr : null;
     const fileSize = new FileSize(json['size'] as number);
     const width = (json['width'] as number | undefined) ?? null;
     const height = (json['height'] as number | undefined) ?? null;
 
-    return new Attachment(id, url, fileName, fileSize, width, height);
+    return new Attachment(id, url, fileName, description, fileSize, width, height);
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@discord-chat-exporter/core",
-  "version": "0.1.3",
-  "description": "TypeScript SDK for exporting Discord chat history",
+  "version": "0.2.0",
+  "description": "TypeScript SDK for exporting Discord chat history (synced with C# DiscordChatExporter v2.47)",
   "type": "module",
   "exports": {
     ".": {

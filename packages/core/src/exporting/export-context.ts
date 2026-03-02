@@ -6,6 +6,7 @@ import { Member } from '../discord/data/member.js';
 import { Channel } from '../discord/data/channel.js';
 import { Role } from '../discord/data/role.js';
 import { Color } from '../utils/color.js';
+import { encodeFilePath } from '../utils/url.js';
 import { ExportRequest } from './export-request.js';
 import { ExportFormat } from './export-format.js';
 import { ExportAssetDownloader } from './export-asset-downloader.js';
@@ -31,11 +32,17 @@ export class ExportContext {
   }
 
   /**
-   * Normalize a date based on UTC normalization setting
+   * Normalize a date based on UTC normalization setting.
+   * When UTC normalization is enabled, the date is kept in UTC.
+   * Otherwise, it is converted to local time representation.
    */
   normalizeDate(instant: Date): Date {
     if (this.request.isUtcNormalizationEnabled) {
-      return instant;
+      // Return a new Date that will format as UTC
+      // We create a date object shifted so that toLocaleString shows UTC values
+      const utcMs = instant.getTime();
+      const offsetMs = instant.getTimezoneOffset() * 60000;
+      return new Date(utcMs + offsetMs);
     }
     return instant;
   }
@@ -154,6 +161,23 @@ export class ExportContext {
    */
   tryGetChannel(id: Snowflake): Channel | null {
     return this.channelsById.get(id.toString()) ?? null;
+  }
+
+  /**
+   * Populate a channel on demand (e.g., for resolving thread mentions)
+   */
+  async populateChannel(channelId: Snowflake): Promise<void> {
+    const idStr = channelId.toString();
+    if (this.channelsById.has(idStr)) {
+      return;
+    }
+
+    try {
+      const channel = await this.discord.getChannel(channelId);
+      this.channelsById.set(idStr, channel);
+    } catch {
+      // Channel may be inaccessible
+    }
   }
 
   /**
@@ -289,7 +313,7 @@ export class ExportContext {
         this.request.format === ExportFormat.HtmlDark ||
         this.request.format === ExportFormat.HtmlLight
       ) {
-        return this.encodeFilePath(optimalFilePath);
+        return encodeFilePath(optimalFilePath);
       }
 
       return optimalFilePath;
@@ -298,18 +322,5 @@ export class ExportContext {
       // TODO: add logging
       return url;
     }
-  }
-
-  /**
-   * Encode a file path for use in HTML
-   */
-  private encodeFilePath(filePath: string): string {
-    // Convert Windows path separators to forward slashes for URLs
-    const normalized = filePath.replace(/\\/g, '/');
-    // Encode each path segment
-    return normalized
-      .split('/')
-      .map((segment) => encodeURIComponent(segment))
-      .join('/');
   }
 }

@@ -114,3 +114,12 @@ export enum EmbedKind {
   Article = 'article',
   Link = 'link',
 }
+
+/**
+ * Message reference types
+ * @see https://discord.com/developers/docs/resources/channel#message-reference-types
+ */
+export enum MessageReferenceKind {
+  Default = 0,
+  Forward = 1,
+}

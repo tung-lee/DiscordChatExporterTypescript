@@ -2,6 +2,7 @@ import { MessageWriter } from './message-writer.js';
 import { PlainTextMarkdownVisitor } from './plain-text-markdown-visitor.js';
 import { ExportContext } from '../export-context.js';
 import { Message } from '../../discord/data/message.js';
+import { MessageSnapshot } from '../../discord/data/message-snapshot.js';
 import { Attachment } from '../../discord/data/attachment.js';
 import { Embed } from '../../discord/data/embeds/embed.js';
 import { Sticker } from '../../discord/data/sticker.js';
@@ -117,6 +118,24 @@ export class PlainTextMessageWriter extends MessageWriter {
     this.writeLine();
   }
 
+  private async writeForwardedMessage(forwardedMessage: MessageSnapshot): Promise<void> {
+    this.writeLine('{Forwarded Message}');
+    this.write(`[${this.context.formatDate(forwardedMessage.timestamp)}]`);
+
+    if (forwardedMessage.content.trim()) {
+      this.write(` ${await this.formatMarkdown(forwardedMessage.content)}`);
+    }
+
+    this.writeLine();
+
+    if (forwardedMessage.attachments.length > 0) {
+      const fileNames = forwardedMessage.attachments.map((a) => a.fileName);
+      this.writeLine(`Attachments: ${fileNames.join(', ')}`);
+    }
+
+    this.writeLine();
+  }
+
   private writeReactions(reactions: readonly Reaction[]): void {
     if (reactions.length === 0) {
       return;
@@ -180,6 +199,11 @@ export class PlainTextMessageWriter extends MessageWriter {
     }
 
     this.writeLine();
+
+    // Forwarded message
+    if (message.forwardedMessage) {
+      await this.writeForwardedMessage(message.forwardedMessage);
+    }
 
     // Attachments, embeds, reactions, etc.
     await this.writeAttachments(message.attachments);

@@ -143,12 +143,22 @@ export class ChannelExporter {
       const messageBatch: Message[] = [];
       const BATCH_SIZE = 50; // Process messages in batches
 
-      for await (const message of this.discord.getMessages(
-        request.channel.id,
-        request.after ?? undefined,
-        request.before ?? undefined,
-        progress
-      )) {
+      // Choose forward or reverse iteration based on request
+      const messageIterator = request.isReverseMessageOrder
+        ? this.discord.getMessagesInReverse(
+            request.channel.id,
+            request.after ?? undefined,
+            request.before ?? undefined,
+            progress
+          )
+        : this.discord.getMessages(
+            request.channel.id,
+            request.after ?? undefined,
+            request.before ?? undefined,
+            progress
+          );
+
+      for await (const message of messageIterator) {
         messageBatch.push(message);
 
         // Process batch when full or at end

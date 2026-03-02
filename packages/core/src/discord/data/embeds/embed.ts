@@ -80,7 +80,7 @@ export class Embed {
   static parse(json: Record<string, unknown>): Embed {
     const title = nullIfWhitespace(json['title'] as string | undefined);
     const kindStr = nullIfWhitespace(json['type'] as string | undefined);
-    const kind = kindStr as EmbedKind | null;
+    const kind = (kindStr as EmbedKind | null) ?? EmbedKind.Rich;
     const url = nullIfWhitespace(json['url'] as string | undefined);
 
     const timestampStr = nullIfWhitespace(json['timestamp'] as string | undefined);

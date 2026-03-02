@@ -209,7 +209,7 @@ export class DiscordClient {
   }
 
   /**
-   * Get JSON response, returning null on 403/404
+   * Get JSON response, returning null on non-success status codes
    */
   private async tryGetJsonResponse(
     url: string
@@ -217,15 +217,8 @@ export class DiscordClient {
     const response = await this.getAuthenticatedResponse(url);
     const body = await response.body.text();
 
-    if (response.statusCode === 403 || response.statusCode === 404) {
-      return null;
-    }
-
     if (!this.isSuccessStatusCode(response.statusCode)) {
-      throw new DiscordChatExporterError(
-        `Request to '${url}' failed: ${response.statusCode}. Response: ${body}`,
-        true
-      );
+      return null;
     }
 
     return JSON.parse(body) as Record<string, unknown>;
@@ -604,6 +597,99 @@ export class DiscordClient {
   }
 
   /**
+   * Get the first message in a channel after a given ID
+   */
+  private async tryGetFirstMessage(
+    channelId: Snowflake,
+    after?: Snowflake
+  ): Promise<Message | null> {
+    const url = new UrlBuilder()
+      .setPath(`channels/${channelId}/messages`)
+      .setQueryParameter('limit', '1')
+      .setQueryParameter('after', (after ?? Snowflake.Zero).toString())
+      .build();
+
+    const response = await this.getJsonArrayResponse(url);
+    return response.length > 0 ? Message.parse(response[0]!) : null;
+  }
+
+  /**
+   * Get messages in a channel in reverse order (newest to oldest)
+   */
+  async *getMessagesInReverse(
+    channelId: Snowflake,
+    after?: Snowflake,
+    before?: Snowflake,
+    progress?: ProgressCallback
+  ): AsyncGenerator<Message> {
+    // Get the first message in the specified range to calculate progress
+    const firstMessage = await this.tryGetFirstMessage(channelId, after);
+    if (
+      firstMessage === null ||
+      (before && firstMessage.timestamp > before.toDate())
+    ) {
+      return;
+    }
+
+    let lastMessage: Message | null = null;
+    let currentBefore = before;
+
+    while (true) {
+      const url = new UrlBuilder()
+        .setPath(`channels/${channelId}/messages`)
+        .setQueryParameter('limit', String(PAGINATION_LIMIT))
+        .setQueryParameter('before', currentBefore?.toString())
+        .build();
+
+      const response = await this.getJsonArrayResponse(url);
+
+      // Messages are returned newest to oldest (no reverse needed)
+      const messages = response.map(Message.parse);
+
+      if (messages.length === 0) {
+        return;
+      }
+
+      // Check for Message Content Intent issue
+      if (
+        messages.every((m) => m.isEmpty) &&
+        (await this.resolveTokenKind()) === TokenKind.Bot
+      ) {
+        const application = await this.getApplication();
+        if (!application.isMessageContentIntentEnabled) {
+          throw new DiscordChatExporterError(
+            'Provided bot account does not have the Message Content Intent enabled.',
+            true
+          );
+        }
+      }
+
+      for (const message of messages) {
+        if (lastMessage === null) {
+          lastMessage = message;
+        }
+
+        // Report progress based on timestamps
+        if (progress && lastMessage) {
+          const exportedDuration =
+            lastMessage.timestamp.getTime() - message.timestamp.getTime();
+          const totalDuration =
+            lastMessage.timestamp.getTime() - firstMessage.timestamp.getTime();
+
+          const percentage =
+            totalDuration > 0 ? (exportedDuration / totalDuration) * 100 : 100;
+
+          progress(Math.min(percentage, 100));
+        }
+
+        yield message;
+      }
+
+      currentBefore = messages[messages.length - 1]!.id;
+    }
+  }
+
+  /**
    * Get threads for a list of channels
    */
   async *getChannelThreads(
@@ -620,6 +706,11 @@ export class DiscordClient {
         !c.isEmpty &&
         (before === undefined || c.mayHaveMessagesBefore(before))
     );
+
+    // Track yielded thread IDs to avoid duplicates that can occur when a thread transitions
+    // from active to archived between the two separate API calls used to fetch threads.
+    // https://github.com/Tyrrrz/DiscordChatExporter/issues/1433
+    const seenThreadIds = new Set<string>();
 
     const tokenKind = await this.resolveTokenKind();
 
@@ -650,6 +741,7 @@ export class DiscordClient {
 
             for (const threadJson of threads) {
               const thread = Channel.parse(threadJson, channel);
+              const threadIdStr = thread.id.toString();
 
               // Break early if past 'after' boundary
               if (after !== undefined && !thread.mayHaveMessagesAfter(after)) {
@@ -657,7 +749,10 @@ export class DiscordClient {
                 break;
               }
 
-              yield thread;
+              if (!seenThreadIds.has(threadIdStr)) {
+                seenThreadIds.add(threadIdStr);
+                yield thread;
+              }
               currentOffset++;
             }
 
@@ -690,7 +785,13 @@ export class DiscordClient {
           const parent = parentId ? parentsById.get(parentId) : null;
 
           if (parent && filteredChannels.includes(parent)) {
-            yield Channel.parse(threadJson, parent);
+            const thread = Channel.parse(threadJson, parent);
+            const threadIdStr = thread.id.toString();
+
+            if (!seenThreadIds.has(threadIdStr)) {
+              seenThreadIds.add(threadIdStr);
+              yield thread;
+            }
           }
         }
       }
@@ -718,7 +819,12 @@ export class DiscordClient {
 
               for (const threadJson of threads) {
                 const thread = Channel.parse(threadJson, channel);
-                yield thread;
+                const threadIdStr = thread.id.toString();
+
+                if (!seenThreadIds.has(threadIdStr)) {
+                  seenThreadIds.add(threadIdStr);
+                  yield thread;
+                }
 
                 const metadata = threadJson['thread_metadata'] as Record<
                   string,

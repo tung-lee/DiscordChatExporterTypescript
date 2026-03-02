@@ -312,6 +312,36 @@ export class JsonMessageWriter extends MessageWriter {
         messageId: message.reference.messageId?.toString() ?? null,
         channelId: message.reference.channelId?.toString() ?? null,
         guildId: message.reference.guildId?.toString() ?? null,
+        type: message.reference.kind,
+      };
+    }
+
+    // Forwarded message
+    if (message.forwardedMessage) {
+      const fwd = message.forwardedMessage;
+      obj.forwardedMessage = {
+        timestamp: this.context.normalizeDate(fwd.timestamp).toISOString(),
+        editedTimestamp: fwd.editedTimestamp
+          ? this.context.normalizeDate(fwd.editedTimestamp).toISOString()
+          : null,
+        content: await this.formatMarkdown(fwd.content),
+        attachments: await Promise.all(
+          fwd.attachments.map(async (att) => ({
+            id: att.id.toString(),
+            url: await this.context.resolveAssetUrl(att.url),
+            fileName: att.fileName,
+            fileSizeBytes: att.fileSize.totalBytes,
+          }))
+        ),
+        embeds: await Promise.all(fwd.embeds.map((e) => this.buildEmbedJson(e))),
+        stickers: await Promise.all(
+          fwd.stickers.map(async (s) => ({
+            id: s.id.toString(),
+            name: s.name,
+            format: s.format.toString(),
+            sourceUrl: await this.context.resolveAssetUrl(s.sourceUrl),
+          }))
+        ),
       };
     }
 

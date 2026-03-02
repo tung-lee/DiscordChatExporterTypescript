@@ -3,19 +3,21 @@ export {
   ChannelKind,
   MessageKind,
   MessageFlags,
+  MessageReferenceKind,
   StickerFormat,
   EmbedKind,
   ApplicationFlags,
 } from './enums.js';
 
 // Common types
-export type { HasId } from './has-id.js';
-export { ImageCdn } from './image-cdn.js';
+export type { HasId } from './common/has-id.js';
+export { ImageCdn } from './common/image-cdn.js';
 
 // Data models
 export { Application } from './application.js';
 export { Attachment } from './attachment.js';
 export { Channel } from './channel.js';
+export { ChannelConnection } from './channel-connection.js';
 export { Emoji } from './emoji.js';
 export { Guild } from './guild.js';
 export { Interaction } from './interaction.js';
@@ -23,6 +25,7 @@ export { Invite } from './invite.js';
 export { Member } from './member.js';
 export { Message } from './message.js';
 export { MessageReference } from './message-reference.js';
+export { MessageSnapshot } from './message-snapshot.js';
 export { Reaction } from './reaction.js';
 export { Role } from './role.js';
 export { Sticker } from './sticker.js';
