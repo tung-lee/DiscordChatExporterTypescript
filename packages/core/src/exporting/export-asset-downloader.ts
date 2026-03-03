@@ -60,6 +60,17 @@ export class ExportAssetDownloader {
       return filePath;
     }
 
+    // Check for legacy file (5-char hash) and migrate if found
+    if (this.reuse) {
+      const legacyFileName = ExportAssetDownloader.getLegacyFileNameFromUrl(url);
+      const legacyFilePath = path.join(this.workingDirPath, legacyFileName);
+      if (legacyFilePath !== filePath && fs.existsSync(legacyFilePath)) {
+        fs.mkdirSync(this.workingDirPath, { recursive: true });
+        fs.renameSync(legacyFilePath, filePath);
+        return filePath;
+      }
+    }
+
     // Ensure directory exists
     fs.mkdirSync(this.workingDirPath, { recursive: true });
 
@@ -92,11 +103,20 @@ export class ExportAssetDownloader {
 
   /**
    * Generate a hash for the URL (for file naming)
+   * Uses 16 chars (64 bits) to minimize collision probability
    */
   private static getUrlHash(url: string): string {
     const normalizedUrl = this.normalizeUrl(url);
     const hash = crypto.createHash('sha256').update(normalizedUrl).digest('hex');
-    // 5 chars ought to be enough for anybody
+    return hash.substring(0, 16);
+  }
+
+  /**
+   * Generate a legacy 5-char hash (for migration detection)
+   */
+  private static getLegacyUrlHash(url: string): string {
+    const normalizedUrl = this.normalizeUrl(url);
+    const hash = crypto.createHash('sha256').update(normalizedUrl).digest('hex');
     return hash.substring(0, 5);
   }
 
@@ -119,6 +139,33 @@ export class ExportAssetDownloader {
     } catch {
       return url;
     }
+  }
+
+  /**
+   * Get a file name from URL using legacy 5-char hash (for migration)
+   */
+  private static getLegacyFileNameFromUrl(url: string): string {
+    const urlHash = this.getLegacyUrlHash(url);
+
+    const match = url.match(/.+\/([^?]*)/);
+    const fileName = match?.[1] ?? '';
+
+    if (!fileName || !fileName.trim()) {
+      return urlHash;
+    }
+
+    let fileNameWithoutExtension = path.basename(fileName, path.extname(fileName));
+    let fileExtension = path.extname(fileName);
+
+    if (fileExtension.length > 41) {
+      fileNameWithoutExtension = fileName;
+      fileExtension = '';
+    }
+
+    const truncatedName = fileNameWithoutExtension.substring(0, 42);
+    const resultName = `${truncatedName}-${urlHash}${fileExtension}`;
+
+    return resultName.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
   }
 
   /**

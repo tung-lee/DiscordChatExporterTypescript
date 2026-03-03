@@ -6,6 +6,7 @@ import { Channel } from '../discord/data/channel.js';
 import { ExportFormat, getExportFormatFileExtension } from './export-format.js';
 import { PartitionLimit, NullPartitionLimit } from './partitioning/partition-limit.js';
 import { MessageFilter, NullMessageFilter } from './filtering/message-filter.js';
+import { escapeFileName } from '../utils/extensions.js';
 
 /**
  * Options for creating an export request
@@ -25,6 +26,7 @@ export interface ExportRequestOptions {
   shouldReuseAssets?: boolean;
   locale?: string;
   isUtcNormalizationEnabled?: boolean;
+  isReverseMessageOrder?: boolean;
 }
 
 /**
@@ -46,6 +48,7 @@ export class ExportRequest {
   readonly shouldReuseAssets: boolean;
   readonly locale: string | null;
   readonly isUtcNormalizationEnabled: boolean;
+  readonly isReverseMessageOrder: boolean;
 
   constructor(options: ExportRequestOptions) {
     this.guild = options.guild;
@@ -60,6 +63,7 @@ export class ExportRequest {
     this.shouldReuseAssets = options.shouldReuseAssets ?? false;
     this.locale = options.locale ?? null;
     this.isUtcNormalizationEnabled = options.isUtcNormalizationEnabled ?? false;
+    this.isReverseMessageOrder = options.isReverseMessageOrder ?? false;
 
     this.outputFilePath = ExportRequest.getOutputBaseFilePath(
       this.guild,
@@ -83,14 +87,6 @@ export class ExportRequest {
     } else {
       this.assetsDirPath = `${this.outputFilePath}_Files${path.sep}`;
     }
-  }
-
-  /**
-   * Escape illegal file name characters
-   */
-  private static escapeFileName(name: string): string {
-    // Replace illegal characters with underscore
-    return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
   }
 
   /**
@@ -141,7 +137,7 @@ export class ExportRequest {
     // File extension
     fileName += `.${getExportFormatFileExtension(format)}`;
 
-    return this.escapeFileName(fileName);
+    return escapeFileName(fileName);
   }
 
   /**
@@ -212,7 +208,7 @@ export class ExportRequest {
           replacement = match;
       }
 
-      return this.escapeFileName(replacement);
+      return escapeFileName(replacement);
     });
   }
 

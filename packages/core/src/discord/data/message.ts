@@ -1,12 +1,13 @@
 import { Snowflake } from '../snowflake.js';
-import { HasId } from './has-id.js';
-import { MessageKind, MessageFlags } from './enums.js';
+import type { HasId } from './common/has-id.js';
+import { MessageKind, MessageFlags, MessageReferenceKind } from './enums.js';
 import { User } from './user.js';
 import { Attachment } from './attachment.js';
 import { Embed } from './embeds/embed.js';
 import { Sticker } from './sticker.js';
 import { Reaction } from './reaction.js';
 import { MessageReference } from './message-reference.js';
+import { MessageSnapshot } from './message-snapshot.js';
 import { Interaction } from './interaction.js';
 
 /**
@@ -30,6 +31,7 @@ export class Message implements HasId {
   readonly mentionedUsers: readonly User[];
   readonly reference: MessageReference | null;
   readonly referencedMessage: Message | null;
+  readonly forwardedMessage: MessageSnapshot | null;
   readonly interaction: Interaction | null;
 
   /**
@@ -65,6 +67,7 @@ export class Message implements HasId {
     mentionedUsers: readonly User[],
     reference: MessageReference | null,
     referencedMessage: Message | null,
+    forwardedMessage: MessageSnapshot | null,
     interaction: Interaction | null
   ) {
     this.id = id;
@@ -83,6 +86,7 @@ export class Message implements HasId {
     this.mentionedUsers = mentionedUsers;
     this.reference = reference;
     this.referencedMessage = referencedMessage;
+    this.forwardedMessage = forwardedMessage;
     this.interaction = interaction;
 
     // System notifications are messages with kinds between RecipientAdd (1) and ThreadCreated (18)
@@ -104,6 +108,13 @@ export class Message implements HasId {
    */
   get isReplyLike(): boolean {
     return this.isReply || this.interaction !== null;
+  }
+
+  /**
+   * Whether this message is a forwarded message
+   */
+  get isForwarded(): boolean {
+    return this.reference?.kind === MessageReferenceKind.Forward;
   }
 
   /**
@@ -328,6 +339,19 @@ export class Message implements HasId {
     const referencedMessageJson = json['referenced_message'] as Record<string, unknown> | null | undefined;
     const referencedMessage = referencedMessageJson ? Message.parse(referencedMessageJson) : null;
 
+    // Currently Discord only supports 1 snapshot per forward
+    const messageSnapshotsJson = json['message_snapshots'] as Record<string, unknown>[] | undefined;
+    let forwardedMessage: MessageSnapshot | null = null;
+    if (messageSnapshotsJson) {
+      for (const snapshot of messageSnapshotsJson) {
+        const messageJson = snapshot['message'] as Record<string, unknown> | undefined;
+        if (messageJson) {
+          forwardedMessage = MessageSnapshot.parse(messageJson);
+          break;
+        }
+      }
+    }
+
     const interactionJson = json['interaction'] as Record<string, unknown> | undefined;
     const interaction = interactionJson ? Interaction.parse(interactionJson) : null;
 
@@ -348,6 +372,7 @@ export class Message implements HasId {
       mentionedUsers,
       reference,
       referencedMessage,
+      forwardedMessage,
       interaction
     );
   }

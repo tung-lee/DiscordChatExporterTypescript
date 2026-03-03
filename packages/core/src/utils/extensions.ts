@@ -73,7 +73,7 @@ export function toSpaceSeparatedWords(value: string): string {
  * Escape a file name by replacing invalid characters
  */
 export function escapeFileName(name: string): string {
-  return name.replace(/[<>:"/\\|?*]/g, '_');
+  return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
 }
 
 /**

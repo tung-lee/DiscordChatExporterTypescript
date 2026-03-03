@@ -94,18 +94,55 @@ export class BinaryExpressionMessageFilter extends MessageFilter {
 }
 
 /**
- * Filter by message content
+ * Escape special regex characters in a string
+ */
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Filter by message content (word-boundary matching)
+ * Also searches embed title, author name, description, footer text, and field names/values
  */
 export class ContainsMessageFilter extends MessageFilter {
-  private readonly normalizedText: string;
+  private readonly pattern: RegExp;
 
   constructor(text: string) {
     super();
-    this.normalizedText = text.toLowerCase();
+    this.pattern = new RegExp(
+      '(?:\\b|\\s|^)' + escapeRegex(text) + '(?:\\b|\\s|$)',
+      'i'
+    );
   }
 
   isMatch(message: Message): boolean {
-    return message.content.toLowerCase().includes(this.normalizedText);
+    // Check message content
+    if (this.pattern.test(message.content)) {
+      return true;
+    }
+
+    // Check embeds
+    for (const embed of message.embeds) {
+      if (embed.title && this.pattern.test(embed.title)) {
+        return true;
+      }
+      if (embed.author?.name && this.pattern.test(embed.author.name)) {
+        return true;
+      }
+      if (embed.description && this.pattern.test(embed.description)) {
+        return true;
+      }
+      if (embed.footer && this.pattern.test(embed.footer.text)) {
+        return true;
+      }
+      for (const field of embed.fields) {
+        if (this.pattern.test(field.name) || this.pattern.test(field.value)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }
 
@@ -125,6 +162,7 @@ export class FromMessageFilter extends MessageFilter {
     return (
       author.id.toString() === this.normalizedValue ||
       author.name.toLowerCase() === this.normalizedValue ||
+      author.displayName.toLowerCase() === this.normalizedValue ||
       author.fullName.toLowerCase() === this.normalizedValue
     );
   }
@@ -146,6 +184,7 @@ export class MentionsMessageFilter extends MessageFilter {
       if (
         user.id.toString() === this.normalizedValue ||
         user.name.toLowerCase() === this.normalizedValue ||
+        user.displayName.toLowerCase() === this.normalizedValue ||
         user.fullName.toLowerCase() === this.normalizedValue
       ) {
         return true;
@@ -286,7 +325,9 @@ export class ReactionMessageFilter extends MessageFilter {
     for (const reaction of message.reactions) {
       if (
         reaction.emoji.code.toLowerCase() === this.normalizedEmoji ||
-        reaction.emoji.name.toLowerCase() === this.normalizedEmoji
+        reaction.emoji.name.toLowerCase() === this.normalizedEmoji ||
+        (reaction.emoji.id !== null &&
+          reaction.emoji.id.toString() === this.normalizedEmoji)
       ) {
         return true;
       }

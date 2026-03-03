@@ -19,6 +19,13 @@ export class Sticker implements HasId {
   }
 
   /**
+   * Whether this sticker is an image (not Lottie animation)
+   */
+  get isImage(): boolean {
+    return this.format !== StickerFormat.Lottie;
+  }
+
+  /**
    * Get the source URL for this sticker
    */
   get sourceUrl(): string {

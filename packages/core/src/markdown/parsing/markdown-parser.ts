@@ -21,7 +21,25 @@ import { Matcher, matchAll } from './matcher.js';
 import { StringMatcher } from './string-matcher.js';
 import { RegexMatcher } from './regex-matcher.js';
 import { AggregateMatcher } from './aggregate-matcher.js';
-import { emojiIndex } from '../emoji-index.js';
+import { emojiIndex, getAllEmoji } from '../emoji-index.js';
+
+/**
+ * Escape a string for use in a regex pattern
+ */
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Build a regex that matches any known standard emoji.
+ * Emoji are sorted longest-first so compound emoji (ZWJ sequences,
+ * skin-tone modifiers) match before individual components.
+ */
+function buildStandardEmojiRegex(): RegExp {
+  const allEmoji = getAllEmoji(); // already sorted longest-first
+  const pattern = '(' + allEmoji.map(escapeRegex).join('|') + ')';
+  return new RegExp(pattern, 'u');
+}
 
 /**
  * Parsing context to track recursion depth
@@ -260,52 +278,7 @@ const roleMentionMatcher = new RegexMatcher<MarkdownContext, MarkdownNode>(
 /* Emoji Matchers */
 
 const standardEmojiMatcher = new RegexMatcher<MarkdownContext, MarkdownNode>(
-  new RegExp(
-    '(' +
-      // Country flag emoji
-      '(?:\\uD83C[\\uDDE6-\\uDDFF]){2}|' +
-      // Digit emoji
-      '\\d\\p{Me}|' +
-      // Surrogate pair
-      '\\p{Cs}{2}|' +
-      // Miscellaneous characters
-      '[' +
-      '\\u2600-\\u2604' +
-      '\\u260E\\u2611' +
-      '\\u2614-\\u2615' +
-      '\\u2618\\u261D\\u2620' +
-      '\\u2622-\\u2623' +
-      '\\u2626\\u262A' +
-      '\\u262E-\\u262F' +
-      '\\u2638-\\u263A' +
-      '\\u2640\\u2642' +
-      '\\u2648-\\u2653' +
-      '\\u265F-\\u2660' +
-      '\\u2663' +
-      '\\u2665-\\u2666' +
-      '\\u2668\\u267B' +
-      '\\u267E-\\u267F' +
-      '\\u2692-\\u2697' +
-      '\\u2699' +
-      '\\u269B-\\u269C' +
-      '\\u26A0-\\u26A1' +
-      '\\u26A7' +
-      '\\u26AA-\\u26AB' +
-      '\\u26B0-\\u26B1' +
-      '\\u26BD-\\u26BE' +
-      '\\u26C4-\\u26C5' +
-      '\\u26C8' +
-      '\\u26CE-\\u26CF' +
-      '\\u26D1' +
-      '\\u26D3-\\u26D4' +
-      '\\u26E9-\\u26EA' +
-      '\\u26F0-\\u26F5' +
-      '\\u26F7-\\u26FA' +
-      '\\u26FD' +
-      ']' +
-      ')',
-    'u'
-  ),
+  buildStandardEmojiRegex(),
   (_, __, match) => {
     const emojiGroup = match.groups[1];
     if (!emojiGroup) return null;

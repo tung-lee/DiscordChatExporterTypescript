@@ -38,11 +38,12 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
-    // Quoted string
-    if (input[i] === '"') {
+    // Quoted string (double or single quotes)
+    if (input[i] === '"' || input[i] === "'") {
+      const quoteChar = input[i];
       i++;
       let value = '';
-      while (i < input.length && input[i] !== '"') {
+      while (i < input.length && input[i] !== quoteChar) {
         if (input[i] === '\\' && i + 1 < input.length) {
           i++;
           value += input[i];
@@ -84,7 +85,7 @@ function tokenize(input: string): Token[] {
 
     // Word/text
     let word = '';
-    while (i < input.length && !/[\s:()"\\-]/.test(input[i]!)) {
+    while (i < input.length && !/[\s:()"'\\-]/.test(input[i]!)) {
       word += input[i];
       i++;
     }
@@ -309,7 +310,7 @@ class FilterParser {
  * - Negation with - or not
  * - Conjunction with and, &, &&, or implicit (space)
  * - Disjunction with or, |, ||
- * - Quoted strings: "exact phrase"
+ * - Quoted strings: "exact phrase" or 'exact phrase'
  *
  * Examples:
  * - from:john has:image

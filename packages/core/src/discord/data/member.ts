@@ -1,4 +1,5 @@
 import { Snowflake } from '../snowflake.js';
+import type { HasId } from './common/has-id.js';
 import { User } from './user.js';
 import { ImageCdn } from './common/image-cdn.js';
 import { nullIfWhitespace } from '../../utils/extensions.js';
@@ -7,7 +8,7 @@ import { nullIfWhitespace } from '../../utils/extensions.js';
  * Represents a Discord guild member
  * @see https://discord.com/developers/docs/resources/guild#guild-member-object
  */
-export class Member {
+export class Member implements HasId {
   readonly user: User;
   readonly nick: string | null;
   readonly roleIds: readonly Snowflake[];
@@ -26,6 +27,10 @@ export class Member {
     this.roleIds = roleIds;
     this.avatarUrl = avatarUrl;
     this.guildId = guildId;
+  }
+
+  get id(): Snowflake {
+    return this.user.id;
   }
 
   /**
