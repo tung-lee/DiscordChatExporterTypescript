@@ -6,9 +6,10 @@
 |-----------|-------|
 | **Name** | Discord Chat Exporter |
 | **Type** | TypeScript Monorepo (SDK + CLI) |
-| **Version** | 0.1.0 |
+| **Version** | 0.2.0 |
 | **License** | MIT |
 | **Node.js** | >= 20.0.0 |
+| **pnpm** | >= 8.0.0 |
 
 ## Packages
 
@@ -112,6 +113,8 @@ A dual-package monorepo that provides:
 | User Token | Full | For personal account exports |
 | Bot Token | Full | Requires Message Content Intent |
 
+Token can be provided via `--token` flag or the `DISCORD_TOKEN` environment variable.
+
 ## User Personas
 
 ### 1. Server Administrator
@@ -164,7 +167,7 @@ discord-chat-exporter export -t TOKEN -c CHANNEL_ID -f json --filter "has:attach
 **Usage:**
 ```bash
 discord-chat-exporter dms -t TOKEN
-discord-chat-exporter export -t TOKEN -c DM_CHANNEL_ID
+discord-chat-exporter exportdm -t TOKEN -o ./dm-exports
 ```
 
 ## Non-Functional Requirements
@@ -202,7 +205,7 @@ discord-chat-exporter export -t TOKEN -c DM_CHANNEL_ID
 
 ### CLI Design (`@discord-chat-exporter/cli`)
 
-1. **Subcommand Structure**: `export`, `exportguild`, `guilds`, `channels`, `dms`
+1. **Subcommand Structure**: `export`, `exportguild`, `exportdm`, `exportall`, `guilds`, `channels`, `dms`, `guide`
 2. **Consistent Options**: Same options across related commands
 3. **Progress Feedback**: Real-time progress for long operations
 4. **Error Messages**: Clear, actionable error descriptions
@@ -246,15 +249,29 @@ discord-chat-exporter export -t TOKEN -c DM_CHANNEL_ID
 - Media downloads add significant time
 - HTML exports are largest in size
 
-## Roadmap Considerations
+## Roadmap
 
-### Potential Enhancements
+### Current: v2.47 Sync (8 Phases)
+
+The project is actively syncing with the original C# DiscordChatExporter v2.47 release. See [project-roadmap.md](./project-roadmap.md) for full details.
+
+| Phase | Area | Priority | Status |
+|-------|------|----------|--------|
+| 1 | Data Models & Enums | Critical | Pending |
+| 2 | Discord Client | Critical | Pending |
+| 3 | Export Engine | Critical | Pending |
+| 4 | Format Writers | High | Pending |
+| 5 | Markdown & Emoji | High | Pending |
+| 6 | Filtering System | Medium | Pending |
+| 7 | CLI Commands | High | Pending |
+| 8 | Utilities & Fixes | Medium | Pending |
+
+### Future Considerations
 
 1. **Incremental Export**: Only export new messages since last export
 2. **Stream-Based Writing**: Reduce memory for very large exports
 3. **Database Backend**: SQLite for persistent caching
 4. **Worker Threads**: Parallel message formatting
-5. **WebAssembly**: High-performance markdown parsing
 
 ### Integration Opportunities
 
@@ -284,5 +301,5 @@ discord-chat-exporter export -t TOKEN -c DM_CHANNEL_ID
 
 ---
 
-*Last Updated: 2026-01-01*
-*Version: 0.1.0*
+*Last Updated: 2026-03-03*
+*Version: 0.2.0*

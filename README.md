@@ -50,8 +50,15 @@ npm install @discord-chat-exporter/core
 # Export a single channel
 discord-chat-exporter export -t "YOUR_TOKEN" -c "CHANNEL_ID" -o ./exports
 
+# Or use the DISCORD_TOKEN environment variable
+export DISCORD_TOKEN="YOUR_TOKEN"
+discord-chat-exporter export -c "CHANNEL_ID" -o ./exports
+
 # Export entire guild with threads
 discord-chat-exporter exportguild -t "YOUR_TOKEN" -g "GUILD_ID" -o ./exports --threads
+
+# Export all DM channels
+discord-chat-exporter exportdm -t "YOUR_TOKEN" -o ./exports
 
 # Export with filters and media
 discord-chat-exporter export -t "YOUR_TOKEN" -c "CHANNEL_ID" \
@@ -92,15 +99,18 @@ await exporter.exportChannel(request, (progress) => {
 |---------|-------------|
 | `export` | Export one or more channels |
 | `exportguild` | Export all channels in a guild |
+| `exportdm` | Export all direct message channels |
+| `exportall` | Export all accessible channels (all guilds + DMs) |
 | `guilds` | List accessible guilds |
 | `channels` | List channels in a guild |
 | `dms` | List direct message channels |
+| `guide` | Show the getting started guide |
 
 ### Common Options
 
 | Option | Description |
 |--------|-------------|
-| `-t, --token` | Discord authentication token (required) |
+| `-t, --token` | Discord authentication token (or use `DISCORD_TOKEN` env var) |
 | `-o, --output` | Output path (default: current directory) |
 | `-f, --format` | Format: `json`, `html-dark`, `html-light`, `csv`, `txt` |
 | `--after` | Messages after this date/ID |
@@ -109,6 +119,9 @@ await exporter.exportChannel(request, (progress) => {
 | `--partition` | Split by count (`1000`) or size (`10mb`) |
 | `--media` | Download media attachments |
 | `--parallel` | Parallel channel exports |
+| `--include-threads` | Include threads: `none`, `active`, `all` |
+| `--reverse` | Export messages in reverse order (newest first) |
+| `--utc` | Normalize timestamps to UTC |
 
 ## Filter Expressions
 
@@ -145,6 +158,9 @@ await exporter.exportChannel(request, (progress) => {
 | [docs/project-overview-pdr.md](./docs/project-overview-pdr.md) | Product development requirements |
 | [docs/codebase-summary.md](./docs/codebase-summary.md) | Codebase structure summary |
 | [docs/system-architecture.md](./docs/system-architecture.md) | System architecture overview |
+| [docs/project-roadmap.md](./docs/project-roadmap.md) | Project roadmap and milestones |
+| [docs/tech-stack.md](./docs/tech-stack.md) | Technology stack details |
+| [docs/code-standards.md](./docs/code-standards.md) | Code standards and conventions |
 
 ## Project Structure
 
@@ -225,4 +241,4 @@ All credit for the core concepts, export format designs, and feature set goes to
 
 ---
 
-*Last Updated: 2026-01-01*
+*Last Updated: 2026-03-03*

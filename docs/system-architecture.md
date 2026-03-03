@@ -95,10 +95,12 @@ packages/core/
 
 ### CLI Layer (`packages/cli/src/cli.ts`)
 
-Entry point for command-line usage:
+Entry point for command-line usage with 8 commands (`export`, `exportguild`, `exportdm`, `exportall`, `guilds`, `channels`, `dms`, `guide`):
 - Parses command-line arguments using Commander
+- Resolves token from `--token` flag or `DISCORD_TOKEN` environment variable
 - Validates user input (tokens, channel IDs, formats)
-- Orchestrates export operations
+- Orchestrates export operations with parallel channel processing
+- Handles thread inclusion (none/active/all) for export commands
 - Displays progress and handles errors
 
 ### Export Layer (`packages/core/src/exporting/`)
@@ -135,9 +137,10 @@ Format-specific output generators:
 #### DiscordClient
 HTTP client for Discord API:
 - Handles authentication (user/bot tokens)
-- Implements rate limiting with backoff
+- Implements rate limiting with backoff and configurable rate limit preferences
 - Provides async generators for pagination
 - Manages retry logic for transient failures
+- Supports thread fetching (active and archived) and DM channel listing
 
 #### Data Models (`packages/core/src/discord/data/`)
 Immutable representations of Discord entities:
@@ -403,9 +406,9 @@ Error
 
 ## Build Configuration
 
-### Dual Format Output
+### Build Output
 
-Both packages build to ESM and CJS:
+The core package builds to both ESM and CJS for broad compatibility. The CLI package builds to ESM only:
 
 | Package | Format | Output |
 |---------|--------|--------|
@@ -427,7 +430,7 @@ Both packages build to ESM and CJS:
 ## Security Model
 
 ### Token Handling
-- Tokens passed via CLI arguments or environment
+- Tokens passed via `--token` CLI argument or `DISCORD_TOKEN` environment variable
 - Never persisted to disk
 - Cleared from memory after client initialization
 
@@ -443,4 +446,4 @@ Both packages build to ESM and CJS:
 
 ---
 
-*Last Updated: 2026-01-01*
+*Last Updated: 2026-03-03*

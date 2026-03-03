@@ -129,9 +129,12 @@ discord-chat-exporter/
 **Commands:**
 - `export` - Export channel(s) to file
 - `exportguild` - Export all channels in a guild
+- `exportdm` - Export all direct message channels
+- `exportall` - Export all accessible channels (all guilds + DMs)
 - `guilds` - List available guilds
 - `channels` - List channels in a guild
 - `dms` - List direct message channels
+- `guide` - Show the getting started guide
 
 ## Module Breakdown
 
@@ -172,7 +175,7 @@ discord-chat-exporter/
 
 | File | Responsibility |
 |------|----------------|
-| `cli.ts` | Commander.js-based CLI with 5 commands |
+| `cli.ts` | Commander.js-based CLI with 8 commands |
 
 ## Data Flow
 
@@ -244,4 +247,4 @@ Output File(s)
 
 ---
 
-*Last Updated: 2026-01-01*
+*Last Updated: 2026-03-03*
